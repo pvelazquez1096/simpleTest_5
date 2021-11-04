@@ -43,4 +43,3 @@ C:\Users\pvelazquez\source\repos\simpleTest_5\bin\Debug\netcoreapp3.1\runtimes\w
 C:\Users\pvelazquez\source\repos\simpleTest_5\bin\Debug\netcoreapp3.1\runtimes\win-x86\native\sni.dll
 C:\Users\pvelazquez\source\repos\simpleTest_5\bin\Debug\netcoreapp3.1\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
 C:\Users\pvelazquez\source\repos\simpleTest_5\bin\Debug\netcoreapp3.1\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
-C:\Users\pvelazquez\source\repos\simpleTest_5\obj\Debug\netcoreapp3.1\simpleTest_5.csproj.CopyComplete

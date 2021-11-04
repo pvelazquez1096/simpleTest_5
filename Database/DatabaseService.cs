@@ -37,7 +37,11 @@ namespace simpleTest_5.Database
                     dataReader = cmd.ExecuteReader();
                 }
             }
-
+            while (dataReader.Read())
+            {
+                string firstName = dataReader["FirstName"].ToString();
+                Console.WriteLine(firstName);
+            }
             sqlCon.Close();
             return dataReader;
         }
