@@ -45,17 +45,32 @@ namespace simpleTest_5.Graph
             }
         }
 
+        public static async Task<User> GetUserByEmail(string userDummie)
+        {
+            try
+            {
+                return await graphClient.Users[userDummie]
+                        .Request()
+                        .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType")
+                        .GetAsync();
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error getting user: {ex.Message}");
+                return null;
+            }
+        }
         public static async Task<List<User>> GetUsers()
         {
             try
             {
                 var users = await graphClient.Users.Request().GetAsync();
                 List<User> userList = new List<User>();
-                
-                while(users.Count > 0)
+
+                while (users.Count > 0)
                 {
                     userList.AddRange(users);
-                    if(users.NextPageRequest != null)
+                    if (users.NextPageRequest != null)
                     {
                         users = await users.NextPageRequest.GetAsync();
                     }
@@ -67,13 +82,13 @@ namespace simpleTest_5.Graph
 
                 return userList;
             }
-            catch(ServiceException ex)
+            catch (ServiceException ex)
             {
                 //Console.WriteLine($"Error getting users: {ex.Message}");
                 return null;
             }
         }
-        
+
         //TODO Add payload of a real user from db
         public static async Task<User> CreateUser(UserDummie newUser)
         {
@@ -123,9 +138,9 @@ namespace simpleTest_5.Graph
                         Country = newUser.GetResource_country()
                     };
                 }
-                
+
                 return await graphClient.Users.Request().Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType").AddAsync(user);
-            }catch (ServiceException ex)
+            } catch (ServiceException ex)
             {
                 //Console.WriteLine($"Error creating user: {ex.Message}");
                 return null;
@@ -165,7 +180,7 @@ namespace simpleTest_5.Graph
                 var groups = await graphClient.Groups.Request().GetAsync();
                 List<Group> groupList = new List<Group>();
 
-                while(groups.Count > 0)
+                while (groups.Count > 0)
                 {
                     groupList.AddRange(groups);
                     if (groups.NextPageRequest != null)
@@ -182,7 +197,7 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-        
+
         public static async Task<int> AddMemberToGroup(User user, Group group)
         {
             try
@@ -234,6 +249,49 @@ namespace simpleTest_5.Graph
             }
         }
 
+        public static async Task<List<DirectoryObject>> GetGroupsFromMember(User user)
+        {
+            List<Group> result = new List<Group>();
+            try
+            {
+                var memberOf = await graphClient.Users[user.Id].MemberOf.Request().GetAsync();
+
+                return memberOf.ToList();
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error getting members: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static async Task<int> DeleteMemberFromGroup(User user, Group group)
+        {
+            try
+            {
+                await graphClient.Groups[group.Id].Members[user.Id].Reference.Request().DeleteAsync();
+                return 0;
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error deleting member from group: {ex.Message}");
+                return -1;
+            }
+        }
+
+        public static async Task<bool> GroupExists(Group group)
+        {
+            try
+            {
+                var result = await graphClient.Groups[group.Id].Request().GetAsync();
+                return true;
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error deleting member from group: {ex.Message}");
+                return false;
+            }
+        }
         private static string RemoveWhitespace(string input)
         {
             return new string(input.ToCharArray()

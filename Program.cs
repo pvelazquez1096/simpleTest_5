@@ -29,11 +29,10 @@ namespace simpleTest_5
             /////////////////////////////////////////////////
 
 
-            csv = tool.LoadCSV(path);
-            usersDummie = tool.CreateUsers(csv);
-            GroupCreation(csv, tool);
-            groups = await GraphHelper.ReadAllGroups();
-            groups = await AddUsersToCOEGroups(usersDummie, groups);
+            //csv = tool.LoadCSV(path);
+            //usersDummie = tool.CreateUsers(csv);
+
+
             Console.ReadKey();
         }
         public static DeviceCodeAuthProvider GetDeviceCodeAuthProvider()
@@ -42,6 +41,48 @@ namespace simpleTest_5
             var scopesString = "User.Read;User.ReadWrite.All;User.ManageIdentities.All;GroupMember.ReadWrite.All;Group.ReadWrite.All;Group.ReadWrite.All;People.Read.All";
             var scopes = scopesString.Split(';');
             return new DeviceCodeAuthProvider(appId, scopes);
+        }
+        private static List<Group> checkFieldsChanged(List<DirectoryObject> directory, UserDummie user)
+        {
+            List<Group> changes = new List<Group>();
+            foreach (Group group in directory)
+            {
+                if (group.Description == "COE")
+                {
+                    if (group.DisplayName != user.GetCOE())
+                        changes.Add(group);
+                }else if(group.Description == "Vertical")
+                {
+                    if (group.DisplayName != user.GetVertical())
+                        changes.Add(group);
+                }else if(group.Description == "Resource_country")
+                {
+                    if (group.DisplayName != user.GetResource_country())
+                        changes.Add(group);
+                }
+            }
+            return changes;
+        }
+        public static async Task<List<Group>> AddUserToGroupsDinamically(List<UserDummie> userList)
+        {
+            foreach (UserDummie user in userList)
+            {
+                User userFromAAD = await GraphHelper.GetUserByEmail(user);
+                List<DirectoryObject> directory = await GraphHelper.GetGroupsFromMember(userFromAAD);
+                List<Group> changes = checkFieldsChanged(directory, user);
+
+                foreach(Group change in changes)
+                {
+                    await GraphHelper.DeleteMemberFromGroup(userFromAAD, change);
+                }
+                //Crear grupo y luego agregar o agregar y si no crear grupo
+                //Como saber si el grupo ya existe?
+                //Ademas que los grupos se estan creando como Office 365 y no como Distribution
+
+
+
+            }
+            return null;
         }
         public static async Task<List<Group>> AddUsersToCOEGroups(List<UserDummie> userList, List<Group> groups_)
         {
@@ -106,7 +147,6 @@ namespace simpleTest_5
                 //Console.WriteLine($"{group.DisplayName} {group.MailNickname}");
             }
         }
-
         public static void printInfo(User user)
         {
             Console.WriteLine($"User: {user.DisplayName} Email: {user.UserPrincipalName}");
