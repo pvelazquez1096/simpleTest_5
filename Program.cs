@@ -29,10 +29,18 @@ namespace simpleTest_5
             /////////////////////////////////////////////////
 
 
-            //csv = tool.LoadCSV(path);
-            //usersDummie = tool.CreateUsers(csv);
-
-
+            csv = tool.LoadCSV(path);
+            usersDummie = tool.CreateUsers(csv);
+            groups = await GraphHelper.GetAllGroups();
+            groups = await AddUsersToCOEGroups(usersDummie, groups);
+            /*
+            groups = await GraphHelper.GetGroupByDisplayName("USA");
+            Console.WriteLine(groups.Count);
+            foreach(Group group in groups)
+            {
+                Console.WriteLine($"{group.Id}  {group.DisplayName}   {group.Description}");
+            }
+            */
             Console.ReadKey();
         }
         public static DeviceCodeAuthProvider GetDeviceCodeAuthProvider()
