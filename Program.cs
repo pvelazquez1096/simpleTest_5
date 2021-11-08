@@ -22,17 +22,14 @@ namespace simpleTest_5
             List<UserDummie> usersDummie = new List<UserDummie>();
             List<Group> groups = new List<Group>();
             string[] csv = null;
-
+            
             ////Initialize connection to Microsoft Graph/////
             var authProvider = GetDeviceCodeAuthProvider();
             GraphHelper.Initialize(authProvider);
             /////////////////////////////////////////////////
 
-
-            csv = tool.LoadCSV(path);
-            usersDummie = tool.CreateUsers(csv);
-            groups = await GraphHelper.GetAllGroups();
-            groups = await AddUsersToCOEGroups(usersDummie, groups);
+            //csv = tool.LoadCSV(path);
+            //usersDummie = tool.CreateUsers(csv);
             /*
             groups = await GraphHelper.GetGroupByDisplayName("USA");
             Console.WriteLine(groups.Count);
@@ -41,12 +38,13 @@ namespace simpleTest_5
                 Console.WriteLine($"{group.Id}  {group.DisplayName}   {group.Description}");
             }
             */
+            
             Console.ReadKey();
         }
         public static DeviceCodeAuthProvider GetDeviceCodeAuthProvider()
         {
             var appId = "5bba094d-693c-43ba-b50b-9b398591825b";
-            var scopesString = "User.Read;User.ReadWrite.All;User.ManageIdentities.All;GroupMember.ReadWrite.All;Group.ReadWrite.All;Group.ReadWrite.All;People.Read.All";
+            var scopesString = "User.Read;User.ReadWrite.All;User.ManageIdentities.All;GroupMember.ReadWrite.All;Group.ReadWrite.All;Group.ReadWrite.All;People.Read.All;Application.ReadWrite.All;Directory.AccessAsUser.All";
             var scopes = scopesString.Split(';');
             return new DeviceCodeAuthProvider(appId, scopes);
         }
@@ -169,4 +167,39 @@ database.inizialliceDatabaseService();
             
 Console.WriteLine("Reading Users from database");
 database.getUsers();
+*/
+/*
+            var schemaExtension = new SchemaExtension
+            {
+                Id = "extras",
+                Description = "Extra properties from salesforce",
+                TargetTypes = new List<String>()
+                {
+                    "User"
+                },
+                Properties = new List<ExtensionSchemaProperty>()
+                {
+                    new ExtensionSchemaProperty
+                    {
+                        Name = "COE",
+                        Type = "String"
+                    },
+                    new ExtensionSchemaProperty
+                    {
+                        Name = "Vertical",
+                        Type = "String"
+                    }
+                }
+            };
+            try
+            {
+                var extension = await GraphHelper.graphClient.SchemaExtensions
+                .Request()
+                .AddAsync(schemaExtension);
+                Console.WriteLine(extension.Id);
+            }
+            catch (ServiceException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
 */

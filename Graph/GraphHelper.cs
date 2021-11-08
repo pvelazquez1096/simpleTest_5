@@ -111,7 +111,7 @@ namespace simpleTest_5.Graph
                         GivenName = newUser.GetName().Split(' ')[0],
                         Surname = newUser.GetName().Split(' ')[1],
                         JobTitle = "Test",
-                        Department = newUser.GetCOE(),
+                        Department = "",
                         CompanyName = "PK",
                         EmployeeId = "E000000",
                         Country = newUser.GetResource_country()
@@ -140,7 +140,8 @@ namespace simpleTest_5.Graph
                 }
 
                 return await graphClient.Users.Request().Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType").AddAsync(user);
-            } catch (ServiceException ex)
+            }
+            catch (ServiceException ex)
             {
                 //Console.WriteLine($"Error creating user: {ex.Message}");
                 return null;
@@ -159,7 +160,7 @@ namespace simpleTest_5.Graph
                     {
                         "Unified"
                     },
-                    MailEnabled = true,
+                    MailEnabled = false,
                     MailNickname = RemoveWhitespace(groupName),
                     SecurityEnabled = false
                 };
@@ -173,11 +174,11 @@ namespace simpleTest_5.Graph
             }
         }
 
-        public static async Task<List<Group>> ReadAllGroups()
+        public static async Task<List<Group>> GetAllGroups()
         {
             try
             {
-                var groups = await graphClient.Groups.Request().GetAsync();
+                var groups = await graphClient.Groups.Request().Filter("groupTypes/any(c:c eq 'Unified')").GetAsync();
                 List<Group> groupList = new List<Group>();
 
                 while (groups.Count > 0)
@@ -194,6 +195,38 @@ namespace simpleTest_5.Graph
             catch (ServiceException ex)
             {
                 //Console.WriteLine($"Error creating group: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static async Task<List<Group>> GetGroupByDisplayName(string displayName)
+        {
+            //           .Filter($"startswith(displayName, '{displayName}')")
+            List<QueryOption> options = new List<QueryOption>{
+                new QueryOption("displayName", "USA")
+            };
+            try
+            {
+                var groups = await graphClient.Groups.Request(options)
+                    .Header("ConsistencyLevel", "eventual")
+                    .GetAsync();
+
+                List<Group> groupList = new List<Group>();
+
+                while (groups.Count > 0)
+                {
+                    groupList.AddRange(groups);
+                    if (groups.NextPageRequest != null)
+                        groups = await groups.NextPageRequest.GetAsync();
+                    else
+                        break;
+                }
+
+                return groupList;
+            }
+            catch (ServiceException ex)
+            {
+                Console.WriteLine($"Error creating group: {ex.Message}");
                 return null;
             }
         }
