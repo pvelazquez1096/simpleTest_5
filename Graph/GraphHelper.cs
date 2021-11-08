@@ -159,7 +159,7 @@ namespace simpleTest_5.Graph
                     {
                         "Unified"
                     },
-                    MailEnabled = true,
+                    MailEnabled = false,
                     MailNickname = RemoveWhitespace(groupName),
                     SecurityEnabled = false
                 };
@@ -173,11 +173,11 @@ namespace simpleTest_5.Graph
             }
         }
 
-        public static async Task<List<Group>> ReadAllGroups()
+        public static async Task<List<Group>> GetAllGroups()
         {
             try
             {
-                var groups = await graphClient.Groups.Request().GetAsync();
+                var groups = await graphClient.Groups.Request().Filter("groupTypes/any(c:c eq 'Unified')").GetAsync();
                 List<Group> groupList = new List<Group>();
 
                 while (groups.Count > 0)
@@ -194,6 +194,38 @@ namespace simpleTest_5.Graph
             catch (ServiceException ex)
             {
                 //Console.WriteLine($"Error creating group: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static async Task<List<Group>> GetGroupByDisplayName(string displayName)
+        {
+            //           .Filter($"startswith(displayName, '{displayName}')")
+            List<QueryOption> options = new List<QueryOption>{
+                new QueryOption("displayName", "USA")
+            };
+            try
+            {
+                var groups = await graphClient.Groups.Request(options)
+                    .Header("ConsistencyLevel", "eventual")
+                    .GetAsync();
+                
+                List<Group> groupList = new List<Group>();
+
+                while (groups.Count > 0)
+                {
+                    groupList.AddRange(groups);
+                    if (groups.NextPageRequest != null)
+                        groups = await groups.NextPageRequest.GetAsync();
+                    else
+                        break;
+                }
+
+                return groupList;
+            }
+            catch (ServiceException ex)
+            {
+                Console.WriteLine($"Error creating group: {ex.Message}");
                 return null;
             }
         }

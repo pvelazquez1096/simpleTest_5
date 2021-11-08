@@ -29,10 +29,11 @@ namespace simpleTest_5
             /////////////////////////////////////////////////
 
 
-            //csv = tool.LoadCSV(path);
-            //usersDummie = tool.CreateUsers(csv);
-
-
+            csv = tool.LoadCSV(path);
+            usersDummie = tool.CreateUsers(csv);
+            groups = await GraphHelper.GetAllGroups();
+            groups = await AddUsersToCOEGroups(usersDummie, groups);
+            
             Console.ReadKey();
         }
         public static DeviceCodeAuthProvider GetDeviceCodeAuthProvider()
@@ -65,6 +66,8 @@ namespace simpleTest_5
         }
         public static async Task<List<Group>> AddUserToGroupsDinamically(List<UserDummie> userList)
         {
+            List<Group> existingGroups = new List<Group>();
+            existingGroups  = await GraphHelper.GetAllGroups();
             foreach (UserDummie user in userList)
             {
                 User userFromAAD = await GraphHelper.GetUserByEmail(user);
