@@ -296,7 +296,19 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-
+        public static async Task<int> DeleteGroup(Group group)
+        {
+            try
+            {
+                await graphClient.Groups[group.Id].Request().DeleteAsync();
+                return 0;
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error getting members: {ex.Message}");
+                return -1;
+            }
+        }
         public static async Task<int> DeleteMemberFromGroup(User user, Group group)
         {
             try

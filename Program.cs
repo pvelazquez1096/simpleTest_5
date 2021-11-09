@@ -31,9 +31,60 @@ namespace simpleTest_5
 
             csv = tool.LoadCSV(path);
             usersDummie = tool.CreateUsers(csv);
-            groups = await GraphHelper.GetAllGroups();
-            groups = await AddUsersToCOEGroups(usersDummie, groups);
-            
+            //groups = await GraphHelper.GetAllGroups();
+            //groups = await AddUsersToCOEGroups(usersDummie, groups);
+            //Create Design Group
+            Group designGroup = await GraphHelper.CreateGroup("Design");
+            Console.WriteLine($"Distribution group: {designGroup.DisplayName} emailAddress: {designGroup.Mail}");
+            Console.ReadKey();
+
+            //Create users to work with (Testing purposes only)
+            User user1 = await GraphHelper.CreateUser(usersDummie.ElementAt(0));
+            User user2 = await GraphHelper.CreateUser(usersDummie.ElementAt(1));
+            User user3 = await GraphHelper.CreateUser(usersDummie.ElementAt(2));
+            Console.ReadKey();
+
+            //Add Users to group Design
+            await GraphHelper.AddMemberToGroup(user1, designGroup);
+            await GraphHelper.AddMemberToGroup(user2, designGroup);
+            await GraphHelper.AddMemberToGroup(user3, designGroup);
+            Console.WriteLine("All users added to Design group");
+            Console.ReadKey();
+
+            //Remove one user from Design group
+            await GraphHelper.DeleteMemberFromGroup(user1, designGroup);
+            Console.WriteLine("One user removed from design group");
+            Console.ReadKey();
+
+            //Create TestOps Group
+            Group testOps = await GraphHelper.CreateGroup("TestOps");
+            Console.WriteLine($"Distribution group: {testOps.DisplayName} emailAddress: {testOps.Mail}");
+            Console.ReadKey();
+
+            //Add to existing users and one new user to TestOps group
+            User user4 = await GraphHelper.CreateUser(usersDummie.ElementAt(3));
+
+            await GraphHelper.AddMemberToGroup(user1, testOps);
+            await GraphHelper.AddMemberToGroup(user2, testOps);
+            await GraphHelper.AddMemberToGroup(user4, testOps);
+            Console.WriteLine("All users added to TestOps group");
+            Console.ReadKey();
+
+            //Delete one common user
+            List<DirectoryObject> groupsInUse = await GraphHelper.GetGroupsFromMember(user2);
+            foreach(Group group in groupsInUse)
+            {
+                await GraphHelper.DeleteMemberFromGroup(user2, group);
+            }
+            Console.WriteLine("User deleted from all groups that it belonged to");
+            Console.ReadKey();
+
+            //Delete the Design Group
+            await GraphHelper.DeleteGroup(designGroup);
+            Console.WriteLine("Group Deleted");
+            Console.ReadKey();
+
+            Console.WriteLine("END");
             Console.ReadKey();
         }
         public static DeviceCodeAuthProvider GetDeviceCodeAuthProvider()
