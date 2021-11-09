@@ -1,4 +1,5 @@
 ﻿using simpleTest_5.Models;
+using Microsoft.Graph;
 using System;
 using System.Collections.Generic;
 namespace simpleTest_5.Tools
@@ -30,6 +31,19 @@ namespace simpleTest_5.Tools
                 Console.WriteLine($"Exception: {ex.Message}");
                 return null;
             }
+        }
+
+        public string[] GetAdditonalPropertiesFromUser(User user)
+        {
+            if(user != null)
+            {
+                string[] data = new string[2];
+                string[] additionalData = user.AdditionalData["extni4xuh4f_extras"].ToString().Split(',');
+                data[0] = additionalData[1].Split(':')[1].Split('"')[1];    //Vertical
+                data[1] = additionalData[2].Split(':')[1].Split('"')[1];    //COE
+                return data;
+            }
+            return null;
         }
 
         public string[] ListDistinctValues(string[] users, string field)

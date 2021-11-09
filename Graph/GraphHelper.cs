@@ -10,23 +10,11 @@ namespace simpleTest_5.Graph
     public class GraphHelper
     {
         private static GraphServiceClient graphClient;
+        private static Random rand = new Random();                     //Just for testing porpuses
+        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,extni4xuh4f_extras";
         public static void Initialize(IAuthenticationProvider authProvider)
         {
             graphClient = new GraphServiceClient(authProvider);
-        }
-
-        public static async Task<User> GetMeAsync()
-        {
-            try
-            {
-                // GET /me
-                return await graphClient.Me.Request().GetAsync();
-            }
-            catch (ServiceException ex)
-            {
-                Console.WriteLine($"Error getting signed-in user: {ex.Message}");
-                return null;
-            }
         }
 
         public static async Task<User> GetUserByEmail(UserDummie userDummie)
@@ -35,7 +23,7 @@ namespace simpleTest_5.Graph
             {
                 return await graphClient.Users[userDummie.GetEmail()]
                         .Request()
-                        .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType")
+                        .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,extni4xuh4f_extras")
                         .GetAsync();
             }
             catch (ServiceException ex)
@@ -44,14 +32,13 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-
         public static async Task<User> GetUserByEmail(string userDummie)
         {
             try
             {
                 return await graphClient.Users[userDummie]
                         .Request()
-                        .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType")
+                        .Select(allUserAttributes)
                         .GetAsync();
             }
             catch (ServiceException ex)
@@ -64,7 +51,10 @@ namespace simpleTest_5.Graph
         {
             try
             {
-                var users = await graphClient.Users.Request().GetAsync();
+                var users = await graphClient.Users
+                           .Request()
+                           .Select(allUserAttributes)
+                           .GetAsync();
                 List<User> userList = new List<User>();
 
                 while (users.Count > 0)
@@ -88,58 +78,50 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-
         //TODO Add payload of a real user from db
         public static async Task<User> CreateUser(UserDummie newUser)
         {
             try
             {
                 User user = null;
-                if (newUser.GetCOE().Length != 0)
+                string extras = "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
+                user = new User
                 {
-                    user = new User
+                    AccountEnabled = true,
+                    DisplayName = newUser.GetName(),
+                    MailNickname = newUser.GetEmail().Split('@')[0],
+                    UserPrincipalName = newUser.GetEmail(),
+                    PasswordProfile = new PasswordProfile
                     {
-                        AccountEnabled = true,
-                        DisplayName = newUser.GetName(),
-                        MailNickname = newUser.GetEmail().Split('@')[0],
-                        UserPrincipalName = newUser.GetEmail(),
-                        PasswordProfile = new PasswordProfile
-                        {
-                            ForceChangePasswordNextSignIn = false,
-                            Password = "Mision31$"
-                        },
-                        GivenName = newUser.GetName().Split(' ')[0],
-                        Surname = newUser.GetName().Split(' ')[1],
-                        JobTitle = "Test",
-                        Department = "",
-                        CompanyName = "PK",
-                        EmployeeId = "E000000",
-                        Country = newUser.GetResource_country()
-                    };
-                }
-                else
-                {
-                    user = new User
+                        ForceChangePasswordNextSignIn = false,
+                        Password = "Mision31$"
+                    },
+                    PreferredLanguage = null,
+                    GivenName = newUser.GetName().Split(' ')[0],
+                    Surname = newUser.GetName().Split(' ')[1],
+                    JobTitle = "Test",
+                    Department = "",
+                    CompanyName = "PK",
+                    EmployeeId = "E"+rand.Next(0,10000).ToString(),
+                    StreetAddress = "Felipe Angeles",
+                    State = "Queretaro",
+                    OfficeLocation = "Parque TEC",
+                    City = "Queretaro",
+                    PostalCode = "76150",
+                    Country = newUser.GetResource_country(),
+                    BusinessPhones = new List<String>()
                     {
-                        AccountEnabled = true,
-                        DisplayName = newUser.GetName(),
-                        MailNickname = newUser.GetEmail().Split('@')[0],
-                        UserPrincipalName = newUser.GetEmail(),
-                        PasswordProfile = new PasswordProfile
-                        {
-                            ForceChangePasswordNextSignIn = false,
-                            Password = "Mision31$"
-                        },
-                        GivenName = newUser.GetName().Split(' ')[0],
-                        Surname = newUser.GetName().Split(' ')[1],
-                        JobTitle = "Test",
-                        CompanyName = "PK",
-                        EmployeeId = "E000000",
-                        Country = newUser.GetResource_country()
-                    };
-                }
-
-                return await graphClient.Users.Request().Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType").AddAsync(user);
+                        "1234567890"
+                    },
+                                        MobilePhone = "0987654321",
+                                        Mail = "myEmail7@domail.com",
+                                        AdditionalData = new Dictionary<string, object>()
+                    {
+                        {"extni4xuh4f_extras", extras}
+                    }
+                };
+                
+                return await graphClient.Users.Request().Select(allUserAttributes).AddAsync(user);
             }
             catch (ServiceException ex)
             {
@@ -147,7 +129,29 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
+        /*
+        public static async Task<User> UpdateUser(UserDummie user)
+        {
+            try
+            {
+                string extras = "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (user.GetCOE() is null || user.GetCOE().Length == 0) ? "" : user.GetCOE(), (user.GetVertical() is null || user.GetVertical().Length == 0) ? "" : user.GetVertical()) + "}";
+                var patchedUser = new User
+                {
+                    AdditionalData = new Dictionary<string, object>()
+                    {
+                        {"extni4xuh4f_extras", extras}
+                    }
+                };
 
+                await graphClient.Users(user.
+            }
+            catch (ServiceException ex)
+            {
+                //Console.WriteLine($"Error creating user: {ex.Message}");
+                return null;
+            }
+        }
+        */
         public static async Task<Group> CreateGroup(string groupName)
         {
             try
