@@ -25,7 +25,24 @@ namespace simpleTest_5
             ////Initialize connection to Microsoft Graph/////
             var authProvider = GetDeviceCodeAuthProvider();
             GraphHelper.Initialize(authProvider);
+            /*
+            foreach(UserDummie user in usersDummie)
+            {
+                User newUser = await GraphHelper.CreateUser(user);
+                if(newUser!=null)
+                    Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
+            }
+            Console.WriteLine("Users created");
+            List<User> usersNotAdded = await AddUserToGroupsDinamically(usersDummie);
+            foreach(User user in usersNotAdded)
+                Console.WriteLine($"User {user.DisplayName} not added");
             
+            User newUser = await GraphHelper.GetUserByEmail("pedro@dlsandbox.onmicrosoft.com");
+            newUser = await GraphHelper.UpdateUser(newUser, "Solution Delivery Team", "Other");
+            Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
+            */
+            
+
             Console.WriteLine("End");
             Console.ReadKey();
         }
@@ -36,42 +53,90 @@ namespace simpleTest_5
             var scopes = scopesString.Split(';');
             return new DeviceCodeAuthProvider(appId, scopes);
         }
-        private static List<Group> checkFieldsChanged(List<DirectoryObject> directory, User user)
+        public static async Task<List<User>> AddUserToGroupsDinamically(List<UserDummie> userList)
         {
-            ToolService tool = new ToolService();
-            List<Group> changedGroups = new List<Group>();
-            string[] additionalProperties = tool.GetAdditonalPropertiesFromUser(user);
-            string vertical = additionalProperties[0];
-            string coe = additionalProperties[1];
-
-            foreach (Group group in directory)
-            {
-                if (group.Description == "COE")
-                {
-                    if (group.DisplayName != coe)
-                        changedGroups.Add(group);
-                }else if(group.Description == "Vertical")
-                {
-                    if (group.DisplayName != vertical)
-                        changedGroups.Add(group);
-                }else if(group.Description == "Resource_country")
-                {
-                    if (group.DisplayName != user.Country)
-                        changedGroups.Add(group);
-                }
-            }
-            return changedGroups;
-        }
-        public static async Task<List<Group>> AddUserToGroupsDinamically(List<UserDummie> userList)
-        {
+            List<User> usersNotAdded = new List<User>();
             foreach (UserDummie user in userList)
             {
                 User userFromAAD = await GraphHelper.GetUserByEmail(user);
                 List<DirectoryObject> directory = await GraphHelper.GetGroupsFromMember(userFromAAD);
-                List<Group> changedGroups = checkFieldsChanged(directory, userFromAAD);
-
+                bool result = await addUsersToGroups(directory, userFromAAD);
+                if (!result)
+                {
+                    Console.WriteLine("User Added incorrectly");
+                    usersNotAdded.Add(userFromAAD);
+                }
             }
-            return null;
+            return usersNotAdded;
+        }
+        private static async Task<bool> addUsersToGroups(List<DirectoryObject> directory, User user)
+        {
+            ToolService tool = new ToolService();
+            string[] additionalProperties = tool.GetAdditonalPropertiesFromUser(user);
+            string vertical = additionalProperties[0];
+            string coe = (additionalProperties[1] is null || additionalProperties[1].Length == 0) ? "" : additionalProperties[1];
+            bool result = false;
+            if (directory != null && directory.Count != 0)
+            {
+                foreach (Group group in directory)
+                {
+                    if (group.Description == "COE")
+                    {
+                        if (coe.Length == 0)
+                        {
+                            await GraphHelper.DeleteMemberFromGroup(user, group);
+                            return true;
+                        }
+                        else
+                            if (group.DisplayName != coe)
+                            return await MoveUserFromGroupToGroup(user, group, coe);
+                    }
+                    else if (group.Description == "Vertical")
+                        if (group.DisplayName != vertical)
+                            return await MoveUserFromGroupToGroup(user, group, vertical);
+                    else if (group.Description == "Resource_country")
+                        if (group.DisplayName != user.Country)
+                            return await MoveUserFromGroupToGroup(user, group, user.Country);
+                }
+            }
+            else
+            {
+                result = await MoveUserToGroup(user, vertical, "Vertical");
+                result = result && await MoveUserToGroup(user, user.Country, "Resource_country");
+                if (coe.Length != 0)                                    //User that actually has COE assigned else is not moved to a group
+                    result = result && await MoveUserToGroup(user, coe, "COE");
+                return result;
+            }
+            return false;
+        }
+        private static async Task<bool> MoveUserFromGroupToGroup(User user, Group group, string groupDisplayName)
+        {
+            await GraphHelper.DeleteMemberFromGroup(user, group);
+            var targetGroups = await GraphHelper.GetGroupByDisplayName(groupDisplayName);
+            Group targeGroup;
+            if (targetGroups != null)
+                targeGroup = targetGroups.ElementAt(0);
+            else
+                targeGroup = await GraphHelper.CreateGroup(groupDisplayName, group.Description);
+
+            if (await GraphHelper.AddMemberToGroup(user, targeGroup) == 0)
+                return true;
+            else
+                return false;
+        }
+        private static async Task<bool> MoveUserToGroup(User user, string groupDisplayName, string description)
+        {
+            var targetGroups = await GraphHelper.GetGroupByDisplayName(groupDisplayName);
+            Group targeGroup;
+            if (targetGroups != null)
+                targeGroup = targetGroups.ElementAt(0);
+            else
+                targeGroup = await GraphHelper.CreateGroup(groupDisplayName, description);
+
+            if (await GraphHelper.AddMemberToGroup(user, targeGroup) == 0)
+                return true;
+            else
+                return false;
         }
     }
 }

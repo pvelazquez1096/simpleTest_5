@@ -2,12 +2,16 @@
 using Microsoft.Graph;
 using System;
 using System.Collections.Generic;
+using simpleTest_5.Graph;
+
 namespace simpleTest_5.Tools
 {
     public class ToolService
     {
+        private string extensionId = GraphHelper.extensionId;
         public List<UserDummie> CreateUsers(string[] usersData)
         {
+            
             List<UserDummie> result = new List<UserDummie>();
 
             foreach(string user in usersData)
@@ -38,7 +42,7 @@ namespace simpleTest_5.Tools
             if(user != null)
             {
                 string[] data = new string[2];
-                string[] additionalData = user.AdditionalData["extni4xuh4f_extras"].ToString().Split(',');
+                string[] additionalData = user.AdditionalData[extensionId].ToString().Split(',');
                 data[0] = additionalData[1].Split(':')[1].Split('"')[1];    //Vertical
                 data[1] = additionalData[2].Split(':')[1].Split('"')[1];    //COE
                 return data;

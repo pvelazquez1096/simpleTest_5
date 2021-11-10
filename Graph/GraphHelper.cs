@@ -9,9 +9,10 @@ namespace simpleTest_5.Graph
 {
     public class GraphHelper
     {
-        private static GraphServiceClient graphClient;
+        public static GraphServiceClient graphClient;
         private static Random rand = new Random();                     //Just for testing porpuses
-        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,extni4xuh4f_extras";
+        public static string extensionId = "extni4xuh4f_extras";
+        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType," + extensionId;
         public static void Initialize(IAuthenticationProvider authProvider)
         {
             graphClient = new GraphServiceClient(authProvider);
@@ -83,7 +84,7 @@ namespace simpleTest_5.Graph
         {
             try
             {
-                User user = null;
+                User user;
                 string extras = "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
                 user = new User
                 {
@@ -117,7 +118,7 @@ namespace simpleTest_5.Graph
                                         Mail = "myEmail7@domail.com",
                                         AdditionalData = new Dictionary<string, object>()
                     {
-                        {"extni4xuh4f_extras", extras}
+                        {extensionId, extras}
                     }
                 };
                 
@@ -125,7 +126,7 @@ namespace simpleTest_5.Graph
             }
             catch (ServiceException ex)
             {
-                //Console.WriteLine($"Error creating user: {ex.Message}");
+                Console.WriteLine($"Error creating user: {ex.Message}");
                 return null;
             }
         }
@@ -139,26 +140,52 @@ namespace simpleTest_5.Graph
                 {
                     AdditionalData = new Dictionary<string, object>()
                     {
-                        {"extni4xuh4f_extras", extras}
+                        {extensionId, extras}
                     }
                 };
-
-                await graphClient.Users(user.
+                await graphClient.Users[user.GetEmail()].Request().UpdateAsync(patchedUser);
+                return await GetUserByEmail(user.GetEmail());
             }
             catch (ServiceException ex)
             {
-                //Console.WriteLine($"Error creating user: {ex.Message}");
+                Console.WriteLine($"Error creating user: {ex.Message}");
                 return null;
             }
         }
-        
-        public static async Task<Group> CreateGroup(string groupName)
+
+        public static async Task<User> UpdateUser(User user, string coe, string vertical)
+        {
+            try
+            {
+                string extras = "{"+"\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\"," + string.Format("\"Vertical\":\"{0}\",\"COE\":\"{1}\"", (vertical is null || vertical.Length == 0) ? "" : vertical, (coe is null || coe.Length == 0) ? "" : coe) + "}";
+                Console.WriteLine(extras);
+                var user1 = new User
+                {
+                    AdditionalData = new Dictionary<string, object>()
+                    {
+                        {"extni4xuh4f_extras", "{\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\",\"Vertical\":\"NOW Never\",\"COE\":\"PEDRO\"}"}
+                    }
+                };
+
+                await graphClient.Users[user.UserPrincipalName]
+                    .Request()
+                    .UpdateAsync(user1);
+                return await GetUserByEmail(user.UserPrincipalName);
+            }
+            catch (ServiceException ex)
+            {
+                Console.WriteLine($"Error creating user: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static async Task<Group> CreateGroup(string groupName, string description)
         {
             try
             {
                 var group = new Group
                 {
-                    Description = null,
+                    Description = description,
                     DisplayName = groupName,
                     GroupTypes = new List<String>()
                     {
@@ -206,13 +233,12 @@ namespace simpleTest_5.Graph
         public static async Task<List<Group>> GetGroupByDisplayName(string displayName)
         {
             //           .Filter($"startswith(displayName, '{displayName}')")
-            List<QueryOption> options = new List<QueryOption>{
-                new QueryOption("displayName", "USA")
-            };
+            
             try
             {
-                var groups = await graphClient.Groups.Request(options)
+                var groups = await graphClient.Groups.Request()
                     .Header("ConsistencyLevel", "eventual")
+                    .Filter($"startswith(displayName, '{displayName}')")
                     .GetAsync();
 
                 List<Group> groupList = new List<Group>();
