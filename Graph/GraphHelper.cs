@@ -129,7 +129,7 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-        /*
+        
         public static async Task<User> UpdateUser(UserDummie user)
         {
             try
@@ -151,7 +151,7 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-        */
+        
         public static async Task<Group> CreateGroup(string groupName)
         {
             try
@@ -202,7 +202,7 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-
+        //TODO
         public static async Task<List<Group>> GetGroupByDisplayName(string displayName)
         {
             //           .Filter($"startswith(displayName, '{displayName}')")
@@ -327,7 +327,6 @@ namespace simpleTest_5.Graph
                 return -1;
             }
         }
-
         public static async Task<bool> GroupExists(Group group)
         {
             try

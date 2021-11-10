@@ -19,19 +19,13 @@ namespace simpleTest_5
         {
             string path = "C:/Users/pvelazquez/Downloads/EmployeesListPedro2.csv";
             ToolService tool = new ToolService();
-            List<UserDummie> usersDummie = new List<UserDummie>();
             List<Group> groups = new List<Group>();
-            string[] csv = null;
-
+            string[] csv = tool.LoadCSV(path);
+            List<UserDummie> usersDummie = tool.CreateUsers(csv);
             ////Initialize connection to Microsoft Graph/////
             var authProvider = GetDeviceCodeAuthProvider();
             GraphHelper.Initialize(authProvider);
-            /////////////////////////////////////////////////
-            var user = await GraphHelper.GetUserByEmail("pedro@dlsandbox.onmicrosoft.com");
-
-            //csv = tool.LoadCSV(path);
-            //usersDummie = tool.CreateUsers(csv);
-
+            
             Console.WriteLine("End");
             Console.ReadKey();
         }
@@ -42,22 +36,27 @@ namespace simpleTest_5
             var scopes = scopesString.Split(';');
             return new DeviceCodeAuthProvider(appId, scopes);
         }
-        private static List<Group> checkFieldsChanged(List<DirectoryObject> directory, UserDummie user)
+        private static List<Group> checkFieldsChanged(List<DirectoryObject> directory, User user)
         {
+            ToolService tool = new ToolService();
             List<Group> changedGroups = new List<Group>();
+            string[] additionalProperties = tool.GetAdditonalPropertiesFromUser(user);
+            string vertical = additionalProperties[0];
+            string coe = additionalProperties[1];
+
             foreach (Group group in directory)
             {
                 if (group.Description == "COE")
                 {
-                    if (group.DisplayName != user.GetCOE())
+                    if (group.DisplayName != coe)
                         changedGroups.Add(group);
                 }else if(group.Description == "Vertical")
                 {
-                    if (group.DisplayName != user.GetVertical())
+                    if (group.DisplayName != vertical)
                         changedGroups.Add(group);
                 }else if(group.Description == "Resource_country")
                 {
-                    if (group.DisplayName != user.GetResource_country())
+                    if (group.DisplayName != user.Country)
                         changedGroups.Add(group);
                 }
             }
@@ -69,7 +68,7 @@ namespace simpleTest_5
             {
                 User userFromAAD = await GraphHelper.GetUserByEmail(user);
                 List<DirectoryObject> directory = await GraphHelper.GetGroupsFromMember(userFromAAD);
-                List<Group> changedGroups = checkFieldsChanged(directory, user);
+                List<Group> changedGroups = checkFieldsChanged(directory, userFromAAD);
 
             }
             return null;
