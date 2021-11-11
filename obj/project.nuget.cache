@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "PnF9aGnQx3+NLgSRb/2SOJRgnb4U9wKGHamLk9TWSn6Tsfe32TBdCY7tM88ZmEpqZ2CGercWOA4dbeW6M0PrXQ==",
+  "dgSpecHash": "VxQ6e44LtW73kJeLpK9NBsTdn/Ohe6fS2c7uga+wYq9Emjm5hyaucjYPbGuoJ5FG5JCcSg+BphP7yj77gtefXQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\pvelazquez\\source\\repos\\simpleTest_5\\simpleTest_5.csproj",
   "expectedPackageFiles": [
@@ -27,6 +27,7 @@
     "C:\\Users\\pvelazquez\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",
     "C:\\Users\\pvelazquez\\.nuget\\packages\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",
     "C:\\Users\\pvelazquez\\.nuget\\packages\\microsoft.win32.registry\\4.7.0\\microsoft.win32.registry.4.7.0.nupkg.sha512",
+    "C:\\Users\\pvelazquez\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
     "C:\\Users\\pvelazquez\\.nuget\\packages\\runtime.native.system.data.sqlclient.sni\\4.7.0\\runtime.native.system.data.sqlclient.sni.4.7.0.nupkg.sha512",
     "C:\\Users\\pvelazquez\\.nuget\\packages\\runtime.win-arm64.runtime.native.system.data.sqlclient.sni\\4.4.0\\runtime.win-arm64.runtime.native.system.data.sqlclient.sni.4.4.0.nupkg.sha512",
     "C:\\Users\\pvelazquez\\.nuget\\packages\\runtime.win-x64.runtime.native.system.data.sqlclient.sni\\4.4.0\\runtime.win-x64.runtime.native.system.data.sqlclient.sni.4.4.0.nupkg.sha512",

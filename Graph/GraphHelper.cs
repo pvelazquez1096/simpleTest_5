@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json.Linq;
 namespace simpleTest_5.Graph
 {
     public class GraphHelper
@@ -85,7 +85,9 @@ namespace simpleTest_5.Graph
             try
             {
                 User user;
-                string extras = "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
+                string extras = "{\"COE\":\"321\",\"Vertical\":\"Adele test02\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
+                JObject jsonObj = JObject.Parse(extras);
+
                 user = new User
                 {
                     AccountEnabled = true,
@@ -135,7 +137,8 @@ namespace simpleTest_5.Graph
         {
             try
             {
-                string extras = "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (user.GetCOE() is null || user.GetCOE().Length == 0) ? "" : user.GetCOE(), (user.GetVertical() is null || user.GetVertical().Length == 0) ? "" : user.GetVertical()) + "}";
+                string extras = "{\"COE\":\"321\",\"Vertical\":\"Adele test02\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
+                JObject jsonObj = JObject.Parse(extras);
                 var patchedUser = new User
                 {
                     AdditionalData = new Dictionary<string, object>()
@@ -157,18 +160,25 @@ namespace simpleTest_5.Graph
         {
             try
             {
-                string extras = "{"+"\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\"," + string.Format("\"Vertical\":\"{0}\",\"COE\":\"{1}\"", (vertical is null || vertical.Length == 0) ? "" : vertical, (coe is null || coe.Length == 0) ? "" : coe) + "}";
+                string extras = "{\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\",\"Vertical\":\"adhasd\",\"COE\":\"Test coe\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
+                JObject jsonObj = JObject.Parse(extras);
                 Console.WriteLine(extras);
+                Console.WriteLine(jsonObj.ToString());
                 var user1 = new User
                 {
-                    AdditionalData = new Dictionary<string, object>()
+                    AdditionalData = new Dictionary<string, Object>()
                     {
-                        {"extni4xuh4f_extras", "{\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\",\"Vertical\":\"NOW Never\",\"COE\":\"PEDRO\"}"}
+                        {"@odata.context", (String)"https://graph.microsoft.com/v1.0/$metadata#users(extni4xuh4f_extras)/$entity" },
+                        {"extni4xuh4f_extras", (Object) jsonObj}
                     }
                 };
-
+                Console.WriteLine(user1.AdditionalData.ElementAt(0).ToString());
+                Console.WriteLine(user1.AdditionalData.ElementAt(1).ToString());
+                Console.WriteLine(user.AdditionalData.ElementAt(0).ToString());
+                Console.WriteLine(user.AdditionalData.ElementAt(1).ToString());
                 await graphClient.Users[user.UserPrincipalName]
                     .Request()
+                    .Header("Content-type", "application/json")
                     .UpdateAsync(user1);
                 return await GetUserByEmail(user.UserPrincipalName);
             }
@@ -229,30 +239,19 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-        //TODO
-        public static async Task<List<Group>> GetGroupByDisplayName(string displayName)
+        
+        public static async Task<Group> GetGroupByDisplayName(string displayName)
         {
-            //           .Filter($"startswith(displayName, '{displayName}')")
-            
             try
             {
                 var groups = await graphClient.Groups.Request()
                     .Header("ConsistencyLevel", "eventual")
+                    .Header("Content-type", "application/json")
                     .Filter($"startswith(displayName, '{displayName}')")
                     .GetAsync();
 
-                List<Group> groupList = new List<Group>();
 
-                while (groups.Count > 0)
-                {
-                    groupList.AddRange(groups);
-                    if (groups.NextPageRequest != null)
-                        groups = await groups.NextPageRequest.GetAsync();
-                    else
-                        break;
-                }
-
-                return groupList;
+                return groups.FirstOrDefault();
             }
             catch (ServiceException ex)
             {

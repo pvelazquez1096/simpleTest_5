@@ -36,12 +36,14 @@ namespace simpleTest_5
             List<User> usersNotAdded = await AddUserToGroupsDinamically(usersDummie);
             foreach(User user in usersNotAdded)
                 Console.WriteLine($"User {user.DisplayName} not added");
-            
+            */
+
             User newUser = await GraphHelper.GetUserByEmail("pedro@dlsandbox.onmicrosoft.com");
             newUser = await GraphHelper.UpdateUser(newUser, "Solution Delivery Team", "Other");
             Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
-            */
+
             
+
 
             Console.WriteLine("End");
             Console.ReadKey();
@@ -115,7 +117,7 @@ namespace simpleTest_5
             var targetGroups = await GraphHelper.GetGroupByDisplayName(groupDisplayName);
             Group targeGroup;
             if (targetGroups != null)
-                targeGroup = targetGroups.ElementAt(0);
+                targeGroup = targetGroups;
             else
                 targeGroup = await GraphHelper.CreateGroup(groupDisplayName, group.Description);
 
@@ -129,7 +131,7 @@ namespace simpleTest_5
             var targetGroups = await GraphHelper.GetGroupByDisplayName(groupDisplayName);
             Group targeGroup;
             if (targetGroups != null)
-                targeGroup = targetGroups.ElementAt(0);
+                targeGroup = targetGroups;
             else
                 targeGroup = await GraphHelper.CreateGroup(groupDisplayName, description);
 
