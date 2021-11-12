@@ -6,45 +6,24 @@ namespace simpleTest_5.Models
 {
     public class UserDummie
     {
-        private string name;
-        private string email;
-        private string vertical;
-        private string resource_country;
-        private string coe;
-
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Vertical { get; set; }
+        public string Resource_country { get; set; }
+        public string Coe { get; set; }
         public UserDummie(string name, string email, string vertical, string resource_country, string coe)
         {
-            this.name = name;
-            this.email = email;
-            this.vertical = vertical;
-            this.resource_country = resource_country;
-            this.coe = coe;
+            this.Name = name;
+            this.Email = email;
+            this.Vertical = vertical;
+            this.Resource_country = resource_country;
+            this.Coe = coe;
         }
 
-        public string GetName()
-        {
-            return this.name;
-        }
-        public string GetEmail()
-        {
-            return this.email;
-        }
-        public string GetVertical()
-        {
-            return this.vertical;
-        }
-        public string GetResource_country()
-        {
-            return this.resource_country;
-        }
-        public string GetCOE()
-        {
-            return this.coe;
-        }
-
+        
         public void print()
         {
-            Console.WriteLine($"{this.name} {this.email} {this.vertical} {this.resource_country} {this.coe}");
+            Console.WriteLine($"{this.Name} {this.Email} {this.Vertical} {this.Resource_country} {this.Coe}");
         }
     }
 }

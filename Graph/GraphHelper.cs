@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using System.Text.Json;
+
 namespace simpleTest_5.Graph
 {
     public class GraphHelper
@@ -12,7 +14,7 @@ namespace simpleTest_5.Graph
         public static GraphServiceClient graphClient;
         private static Random rand = new Random();                     //Just for testing porpuses
         public static string extensionId = "extni4xuh4f_extras";
-        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType," + extensionId;
+        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,schools";
         public static void Initialize(IAuthenticationProvider authProvider)
         {
             graphClient = new GraphServiceClient(authProvider);
@@ -22,7 +24,7 @@ namespace simpleTest_5.Graph
         {
             try
             {
-                return await graphClient.Users[userDummie.GetEmail()]
+                return await graphClient.Users[userDummie.Email]
                         .Request()
                         .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,extni4xuh4f_extras")
                         .GetAsync();
@@ -91,17 +93,17 @@ namespace simpleTest_5.Graph
                 user = new User
                 {
                     AccountEnabled = true,
-                    DisplayName = newUser.GetName(),
-                    MailNickname = newUser.GetEmail().Split('@')[0],
-                    UserPrincipalName = newUser.GetEmail(),
+                    DisplayName = newUser.Name,
+                    MailNickname = newUser.Email.Split('@')[0],
+                    UserPrincipalName = newUser.Email,
                     PasswordProfile = new PasswordProfile
                     {
                         ForceChangePasswordNextSignIn = false,
                         Password = "Mision31$"
                     },
                     PreferredLanguage = null,
-                    GivenName = newUser.GetName().Split(' ')[0],
-                    Surname = newUser.GetName().Split(' ')[1],
+                    GivenName = newUser.Name.Split(' ')[0],
+                    Surname = newUser.Name.Split(' ')[1],
                     JobTitle = "Test",
                     Department = "",
                     CompanyName = "PK",
@@ -111,7 +113,7 @@ namespace simpleTest_5.Graph
                     OfficeLocation = "Parque TEC",
                     City = "Queretaro",
                     PostalCode = "76150",
-                    Country = newUser.GetResource_country(),
+                    Country = newUser.Resource_country,
                     BusinessPhones = new List<String>()
                     {
                         "1234567890"
@@ -125,62 +127,6 @@ namespace simpleTest_5.Graph
                 };
                 
                 return await graphClient.Users.Request().Select(allUserAttributes).AddAsync(user);
-            }
-            catch (ServiceException ex)
-            {
-                Console.WriteLine($"Error creating user: {ex.Message}");
-                return null;
-            }
-        }
-        
-        public static async Task<User> UpdateUser(UserDummie user)
-        {
-            try
-            {
-                string extras = "{\"COE\":\"321\",\"Vertical\":\"Adele test02\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
-                JObject jsonObj = JObject.Parse(extras);
-                var patchedUser = new User
-                {
-                    AdditionalData = new Dictionary<string, object>()
-                    {
-                        {extensionId, extras}
-                    }
-                };
-                await graphClient.Users[user.GetEmail()].Request().UpdateAsync(patchedUser);
-                return await GetUserByEmail(user.GetEmail());
-            }
-            catch (ServiceException ex)
-            {
-                Console.WriteLine($"Error creating user: {ex.Message}");
-                return null;
-            }
-        }
-
-        public static async Task<User> UpdateUser(User user, string coe, string vertical)
-        {
-            try
-            {
-                string extras = "{\"@odata.type\":\"#microsoft.graph.ComplexExtensionValue\",\"Vertical\":\"adhasd\",\"COE\":\"Test coe\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
-                JObject jsonObj = JObject.Parse(extras);
-                Console.WriteLine(extras);
-                Console.WriteLine(jsonObj.ToString());
-                var user1 = new User
-                {
-                    AdditionalData = new Dictionary<string, Object>()
-                    {
-                        {"@odata.context", (String)"https://graph.microsoft.com/v1.0/$metadata#users(extni4xuh4f_extras)/$entity" },
-                        {"extni4xuh4f_extras", (Object) jsonObj}
-                    }
-                };
-                Console.WriteLine(user1.AdditionalData.ElementAt(0).ToString());
-                Console.WriteLine(user1.AdditionalData.ElementAt(1).ToString());
-                Console.WriteLine(user.AdditionalData.ElementAt(0).ToString());
-                Console.WriteLine(user.AdditionalData.ElementAt(1).ToString());
-                await graphClient.Users[user.UserPrincipalName]
-                    .Request()
-                    .Header("Content-type", "application/json")
-                    .UpdateAsync(user1);
-                return await GetUserByEmail(user.UserPrincipalName);
             }
             catch (ServiceException ex)
             {

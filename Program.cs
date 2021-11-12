@@ -19,29 +19,11 @@ namespace simpleTest_5
         {
             string path = "C:/Users/pvelazquez/Downloads/EmployeesListPedro2.csv";
             ToolService tool = new ToolService();
-            List<Group> groups = new List<Group>();
             string[] csv = tool.LoadCSV(path);
             List<UserDummie> usersDummie = tool.CreateUsers(csv);
             ////Initialize connection to Microsoft Graph/////
             var authProvider = GetDeviceCodeAuthProvider();
             GraphHelper.Initialize(authProvider);
-            /*
-            foreach(UserDummie user in usersDummie)
-            {
-                User newUser = await GraphHelper.CreateUser(user);
-                if(newUser!=null)
-                    Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
-            }
-            Console.WriteLine("Users created");
-            List<User> usersNotAdded = await AddUserToGroupsDinamically(usersDummie);
-            foreach(User user in usersNotAdded)
-                Console.WriteLine($"User {user.DisplayName} not added");
-            */
-
-            User newUser = await GraphHelper.GetUserByEmail("pedro@dlsandbox.onmicrosoft.com");
-            newUser = await GraphHelper.UpdateUser(newUser, "Solution Delivery Team", "Other");
-            Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
-
             
 
 
@@ -61,8 +43,8 @@ namespace simpleTest_5
             foreach (UserDummie user in userList)
             {
                 User userFromAAD = await GraphHelper.GetUserByEmail(user);
-                List<DirectoryObject> directory = await GraphHelper.GetGroupsFromMember(userFromAAD);
-                bool result = await addUsersToGroups(directory, userFromAAD);
+                List<DirectoryObject> groupsFromUser = await GraphHelper.GetGroupsFromMember(userFromAAD);
+                bool result = await AddUsersToGroups(groupsFromUser, userFromAAD, user);
                 if (!result)
                 {
                     Console.WriteLine("User Added incorrectly");
@@ -71,31 +53,26 @@ namespace simpleTest_5
             }
             return usersNotAdded;
         }
-        private static async Task<bool> addUsersToGroups(List<DirectoryObject> directory, User user)
+        private static async Task<bool> AddUsersToGroups(List<DirectoryObject> directory, User user, UserDummie userdummie)
         {
-            ToolService tool = new ToolService();
-            string[] additionalProperties = tool.GetAdditonalPropertiesFromUser(user);
-            string vertical = additionalProperties[0];
-            string coe = (additionalProperties[1] is null || additionalProperties[1].Length == 0) ? "" : additionalProperties[1];
-            bool result = false;
             if (directory != null && directory.Count != 0)
             {
                 foreach (Group group in directory)
                 {
                     if (group.Description == "COE")
                     {
-                        if (coe.Length == 0)
+                        if (userdummie.Coe.Length == 0)
                         {
                             await GraphHelper.DeleteMemberFromGroup(user, group);
                             return true;
                         }
                         else
-                            if (group.DisplayName != coe)
-                            return await MoveUserFromGroupToGroup(user, group, coe);
+                            if (group.DisplayName != userdummie.Coe)
+                            return await MoveUserFromGroupToGroup(user, group, userdummie.Coe);
                     }
                     else if (group.Description == "Vertical")
-                        if (group.DisplayName != vertical)
-                            return await MoveUserFromGroupToGroup(user, group, vertical);
+                        if (group.DisplayName != userdummie.Vertical)
+                            return await MoveUserFromGroupToGroup(user, group, userdummie.Vertical);
                     else if (group.Description == "Resource_country")
                         if (group.DisplayName != user.Country)
                             return await MoveUserFromGroupToGroup(user, group, user.Country);
@@ -103,10 +80,10 @@ namespace simpleTest_5
             }
             else
             {
-                result = await MoveUserToGroup(user, vertical, "Vertical");
+                bool result = await MoveUserToGroup(user, userdummie.Vertical, "Vertical");
                 result = result && await MoveUserToGroup(user, user.Country, "Resource_country");
-                if (coe.Length != 0)                                    //User that actually has COE assigned else is not moved to a group
-                    result = result && await MoveUserToGroup(user, coe, "COE");
+                if (userdummie.Coe.Length != 0)                                    //User that actually has COE assigned else is not moved to a group
+                    result = result && await MoveUserToGroup(user, userdummie.Coe, "COE");
                 return result;
             }
             return false;
@@ -142,7 +119,18 @@ namespace simpleTest_5
         }
     }
 }
-
+/*
+            foreach(UserDummie user in usersDummie)
+            {
+                User newUser = await GraphHelper.CreateUser(user);
+                if(newUser!=null)
+                    Console.WriteLine($"{newUser.DisplayName} {newUser.UserPrincipalName} Vertical: {tool.GetAdditonalPropertiesFromUser(newUser)[0]} COE: {tool.GetAdditonalPropertiesFromUser(newUser)[1]}");
+            }
+            Console.WriteLine("Users created");
+            List<User> usersNotAdded = await AddUserToGroupsDinamically(usersDummie);
+            foreach(User user in usersNotAdded)
+                Console.WriteLine($"User {user.DisplayName} not added");
+            */
 /*
 //Initialize connection to db
 DatabaseService database = new DatabaseService();

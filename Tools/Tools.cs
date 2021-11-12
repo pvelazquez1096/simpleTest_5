@@ -36,55 +36,5 @@ namespace simpleTest_5.Tools
                 return null;
             }
         }
-
-        public string[] GetAdditonalPropertiesFromUser(User user)
-        {
-            if(user != null)
-            {
-                string[] data = new string[2];
-                string[] additionalData = user.AdditionalData[extensionId].ToString().Split(',');
-                data[0] = additionalData[1].Split(':')[1].Split('"')[1];    //Vertical
-                data[1] = additionalData[2].Split(':')[1].Split('"')[1];    //COE
-                return data;
-            }
-            return null;
-        }
-
-        public string[] ListDistinctValues(string[] users, string field)
-        {
-            List<string> coe = new List<string>();
-            int column = FieldSelect(field);
-
-            foreach (string line in users)
-            {
-                string[] columns = line.Split(',');
-                if (columns[column].Length != 0)
-                    coe.Add(columns[column]);
-            }
-            return RemoveDuplicates(coe);
-        }
-
-        private string[] RemoveDuplicates(List<string> s)
-        {
-            HashSet<string> set = new HashSet<string>(s);
-            string[] result = new string[set.Count];
-            set.CopyTo(result);
-            return result;
-        }
-
-        private int FieldSelect(string field)
-        {
-            switch (field)
-            {
-                case "Vertical":
-                    return 2;
-                case "Resource_Country":
-                    return 3;
-                case "COE":
-                    return 4;
-                default:
-                    return 4;
-            }
-        }
     }
 }
