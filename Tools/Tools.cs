@@ -8,7 +8,6 @@ namespace simpleTest_5.Tools
 {
     public class ToolService
     {
-        private string extensionId = GraphHelper.extensionId;
         public List<UserDummie> CreateUsers(string[] usersData)
         {
             

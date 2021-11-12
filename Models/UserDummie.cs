@@ -19,11 +19,5 @@ namespace simpleTest_5.Models
             this.Resource_country = resource_country;
             this.Coe = coe;
         }
-
-        
-        public void print()
-        {
-            Console.WriteLine($"{this.Name} {this.Email} {this.Vertical} {this.Resource_country} {this.Coe}");
-        }
     }
 }

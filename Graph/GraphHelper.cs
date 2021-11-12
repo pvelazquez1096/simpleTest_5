@@ -13,8 +13,7 @@ namespace simpleTest_5.Graph
     {
         public static GraphServiceClient graphClient;
         private static Random rand = new Random();                     //Just for testing porpuses
-        public static string extensionId = "extni4xuh4f_extras";
-        private static string allUserAttributes = "accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,schools";
+        private static string allUserAttributes = "displayName,userPrincipalName,country,id";
         public static void Initialize(IAuthenticationProvider authProvider)
         {
             graphClient = new GraphServiceClient(authProvider);
@@ -26,7 +25,7 @@ namespace simpleTest_5.Graph
             {
                 return await graphClient.Users[userDummie.Email]
                         .Request()
-                        .Select("accountEnabled,ageGroup,businessPhones,city,companyName,consentProvidedForMinor,country,createdDateTime,creationType,department,displayName,employeeId,externalUserState,givenName,id,identities,jobTitle,legalAgeGroupClassification,mail,mobilePhone,officeLocation,onPremisesSyncEnabled,otherMails,postalCode,proxyAddresses,state,streetAddress,surname,usageLocation,userPrincipalName,userType,extni4xuh4f_extras")
+                        .Select(allUserAttributes)
                         .GetAsync();
             }
             catch (ServiceException ex)
@@ -81,16 +80,12 @@ namespace simpleTest_5.Graph
                 return null;
             }
         }
-        //TODO Add payload of a real user from db
+        //TODO Modify payload to data from db
         public static async Task<User> CreateUser(UserDummie newUser)
         {
             try
             {
-                User user;
-                string extras = "{\"COE\":\"321\",\"Vertical\":\"Adele test02\"}";// "{" + string.Format("\"COE\":\"{0}\",\"Vertical\":\"{1}\"", (newUser.GetCOE() is null || newUser.GetCOE().Length == 0) ? "" : newUser.GetCOE(), (newUser.GetVertical() is null || newUser.GetVertical().Length == 0) ? "" : newUser.GetVertical()) + "}";
-                JObject jsonObj = JObject.Parse(extras);
-
-                user = new User
+                User user = new User
                 {
                     AccountEnabled = true,
                     DisplayName = newUser.Name,
@@ -105,9 +100,9 @@ namespace simpleTest_5.Graph
                     GivenName = newUser.Name.Split(' ')[0],
                     Surname = newUser.Name.Split(' ')[1],
                     JobTitle = "Test",
-                    Department = "",
+                    Department = " ",                  
                     CompanyName = "PK",
-                    EmployeeId = "E"+rand.Next(0,10000).ToString(),
+                    EmployeeId = "E"+rand.Next(0,10000).ToString(),     
                     StreetAddress = "Felipe Angeles",
                     State = "Queretaro",
                     OfficeLocation = "Parque TEC",
@@ -118,12 +113,8 @@ namespace simpleTest_5.Graph
                     {
                         "1234567890"
                     },
-                                        MobilePhone = "0987654321",
-                                        Mail = "myEmail7@domail.com",
-                                        AdditionalData = new Dictionary<string, object>()
-                    {
-                        {extensionId, extras}
-                    }
+                    MobilePhone = "0987654321",
+                    Mail = newUser.Email.Split('@')[0] + "@domail.com"
                 };
                 
                 return await graphClient.Users.Request().Select(allUserAttributes).AddAsync(user);
@@ -191,8 +182,6 @@ namespace simpleTest_5.Graph
             try
             {
                 var groups = await graphClient.Groups.Request()
-                    .Header("ConsistencyLevel", "eventual")
-                    .Header("Content-type", "application/json")
                     .Filter($"startswith(displayName, '{displayName}')")
                     .GetAsync();
 
